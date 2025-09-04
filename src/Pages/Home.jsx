@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, memo } from "react"
 import { Github, Linkedin, Mail, ExternalLink, Instagram, Sparkles } from "lucide-react"
-import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
+import codingGif from '../assets/images/coding.gif';
 
 // Memoized Components
 const StatusBadge = memo(() => (
@@ -12,7 +12,7 @@ const StatusBadge = memo(() => (
       <div className="relative px-3 sm:px-4 py-2 rounded-full bg-black/40 backdrop-blur-xl border border-white/10">
         <span className="bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-transparent bg-clip-text sm:text-sm text-[0.7rem] font-medium flex items-center">
           <Sparkles className="sm:w-4 sm:h-4 w-3 h-3 mr-2 text-blue-400" />
-          Ready to Innovate
+          Driven by Creativity & Technology
         </span>
       </div>
     </div>
@@ -25,14 +25,14 @@ const MainTitle = memo(() => (
       <span className="relative inline-block">
         <span className="absolute -inset-2 bg-gradient-to-r from-[#6366f1] to-[#a855f7] blur-2xl opacity-20"></span>
         <span className="relative bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
-          Frontend
+          Creative
         </span>
       </span>
       <br />
       <span className="relative inline-block mt-2">
         <span className="absolute -inset-2 bg-gradient-to-r from-[#6366f1] to-[#a855f7] blur-2xl opacity-20"></span>
         <span className="relative bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent">
-          Developer
+          Specialist
         </span>
       </span>
     </h1>
@@ -74,15 +74,31 @@ const SocialLink = memo(({ icon: Icon, link }) => (
 ));
 
 // Constants
-const TYPING_SPEED = 100;
-const ERASING_SPEED = 50;
-const PAUSE_DURATION = 2000;
-const WORDS = ["Network & Telecom Student", "Tech Enthusiast"];
-const TECH_STACK = ["React", "Javascript", "Node.js", "Tailwind"];
+const TYPING_SPEED = 90;
+const ERASING_SPEED = 45;
+const PAUSE_DURATION = 2200;
+
+const WORDS = [
+  "Professional Graphic Designer",
+  "Business & Operations Manager",
+  "Computer Science Learner",
+  "Innovative Digital Creator",
+  "Problem-Solving Leader"
+];
+
+const TECH_STACK = [
+  "Ai", "Database Development",
+  "Ps & AI", "Photo & Video Editing",
+  "CorelDRAW & 3D Design", 
+  "MS Office", "Telegram Bots",
+  "CS50 Fundamentals",
+  "Digital Marketing"
+  
+];
 const SOCIAL_LINKS = [
-  { icon: Github, link: "https://github.com/EkiZR" },
-  { icon: Linkedin, link: "https://www.linkedin.com/in/ekizr/" },
-  { icon: Instagram, link: "https://www.instagram.com/ekizr._/?hl=id" }
+  { icon: Github, link: "https://github.com/sjdpluse" },
+  { icon: Linkedin, link: "https://www.linkedin.com/in/sajad-ali-mohammadi-659028380/" },
+  { icon: Instagram, link: "https://www.instagram.com/thedorcci?utm_source=qr" }
 ];
 
 const Home = () => {
@@ -141,23 +157,6 @@ const Home = () => {
     return () => clearTimeout(timeout);
   }, [handleTyping]);
 
-  // Lottie configuration
-  const lottieOptions = {
-    src: "https://lottie.host/58753882-bb6a-49f5-a2c0-950eda1e135a/NLbpVqGegK.lottie",
-    loop: true,
-    autoplay: true,
-    rendererSettings: {
-      preserveAspectRatio: 'xMidYMid slice',
-      progressiveLoad: true,
-    },
-    style: { width: "100%", height: "100%" },
-    className: `w-full h-full transition-all duration-500 ${
-      isHovering 
-        ? "scale-[180%] sm:scale-[160%] md:scale-[150%] lg:scale-[145%] rotate-2" 
-        : "scale-[175%] sm:scale-[155%] md:scale-[145%] lg:scale-[140%]"
-    }`
-  };
-
   return (
     <div className="min-h-screen bg-[#030014] overflow-hidden px-[5%] sm:px-[5%] lg:px-[10%] " id="Home">
       <div className={`relative z-10 transition-all duration-1000 ${isLoaded ? "opacity-100" : "opacity-0"}`}>
@@ -183,7 +182,8 @@ const Home = () => {
                 <p className="text-base md:text-lg text-gray-400 max-w-xl leading-relaxed font-light"
                   data-aos="fade-up"
                   data-aos-delay="1000">
-                  Menciptakan Website Yang Inovatif, Fungsional, dan User-Friendly untuk Solusi Digital.
+                  Developing innovative, practical, and user-centered digital solutions — from IT training
+                  and database systems to graphic design, websites, and intelligent tools.
                 </p>
 
                 {/* Tech Stack */}
@@ -223,7 +223,11 @@ const Home = () => {
                 <div className={`relative lg:left-12 z-10 w-full opacity-90 transform transition-transform duration-500 ${
                   isHovering ? "scale-105" : "scale-100"
                 }`}>
-                  <DotLottieReact {...lottieOptions} />
+                  <img
+                    src={codingGif}
+                    alt="Coding animation"
+                    className="w-full h-full object-contain rounded-2xl"
+                  />
                 </div>
 
                 <div className={`absolute inset-0 pointer-events-none transition-all duration-700 ${

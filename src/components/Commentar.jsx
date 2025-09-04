@@ -5,7 +5,6 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { supabase } from '../supabase';
 
-
 const Comment = memo(({ comment, formatDate, index, isPinned = false }) => (
     <div 
         className={`px-4 pt-4 pb-2 rounded-xl border transition-all group hover:shadow-lg hover:-translate-y-0.5 ${
@@ -21,10 +20,10 @@ const Comment = memo(({ comment, formatDate, index, isPinned = false }) => (
             </div>
         )}
         <div className="flex items-start gap-3">
-            {comment.profile_image ? (
+            {comment.avatar_url ? (
                 <img
-                    src={comment.profile_image}
-                    alt={`${comment.user_name}'s profile`}
+                    src={comment.avatar_url}
+                    alt={`${comment.name}'s profile`}
                     className={`w-10 h-10 rounded-full object-cover border-2 flex-shrink-0  ${
                         isPinned ? 'border-indigo-500/50' : 'border-indigo-500/30'
                     }`}
@@ -43,7 +42,7 @@ const Comment = memo(({ comment, formatDate, index, isPinned = false }) => (
                         <h4 className={`font-medium truncate ${
                             isPinned ? 'text-indigo-200' : 'text-white'
                         }`}>
-                            {comment.user_name}
+                            {comment.name}
                         </h4>
                         {isPinned && (
                             <span className="px-2 py-0.5 text-xs bg-indigo-500/20 text-indigo-300 rounded-full">
@@ -56,7 +55,7 @@ const Comment = memo(({ comment, formatDate, index, isPinned = false }) => (
                     </span>
                 </div>
                 <p className="text-gray-300 text-sm break-words leading-relaxed relative bottom-2">
-                    {comment.content}
+                    {comment.comment}
                 </p>
             </div>
         </div>
@@ -229,81 +228,71 @@ const Komentar = () => {
     const [comments, setComments] = useState([]);
     const [pinnedComment, setPinnedComment] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState('');
+    const [error, setError] = useState(''); // For submission form
+    const [fetchError, setFetchError] = useState(''); // For data fetching
+    const [isLoading, setIsLoading] = useState(true); // For data fetching
 
     useEffect(() => {
         // Initialize AOS
         AOS.init({
-            once: false,
+            once: true,
             duration: 1000,
         });
     }, []);
 
-    // Fetch pinned comment
-    useEffect(() => {
-        const fetchPinnedComment = async () => {
-            try {
-                const { data, error } = await supabase
+    const fetchAllComments = useCallback(async () => {
+        // This function won't set loading state on subsequent calls from subscription
+        // to avoid UI flickering. The initial load is handled by isLoading state.
+        setFetchError('');
+        try {
+            // Fetch both pinned and regular comments in parallel
+            const [pinnedResult, commentsResult] = await Promise.all([
+                supabase
                     .from('portfolio_comments')
                     .select('*')
                     .eq('is_pinned', true)
-                    .single();
-                
-                if (error && error.code !== 'PGRST116') {
-                    console.error('Error fetching pinned comment:', error);
-                    return;
-                }
-                
-                if (data) {
-                    setPinnedComment(data);
-                }
-            } catch (error) {
-                console.error('Error fetching pinned comment:', error);
-            }
-        };
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle(),
+                supabase
+                    .from('portfolio_comments')
+                    .select('*')
+                    .eq('is_pinned', false)
+                    .order('created_at', { ascending: false })
+            ]);
 
-        fetchPinnedComment();
+            if (pinnedResult.error) throw pinnedResult.error;
+            if (commentsResult.error) throw commentsResult.error;
+
+            setPinnedComment(pinnedResult.data);
+            setComments(commentsResult.data || []);
+
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+            setFetchError('Failed to load comments. Please check your connection or RLS policies.');
+        }
     }, []);
 
-    // Fetch regular comments (excluding pinned) and set up real-time subscription
+    // Fetch initial data and set up real-time subscription
     useEffect(() => {
-        const fetchComments = async () => {
-            const { data, error } = await supabase
-                .from('portfolio_comments')
-                .select('*')
-                .eq('is_pinned', false)
-                .order('created_at', { ascending: false });
-            
-            if (error) {
-                console.error('Error fetching comments:', error);
-                return;
-            }
-            
-            setComments(data || []);
-        };
-
-        fetchComments();
+        setIsLoading(true);
+        fetchAllComments().finally(() => setIsLoading(false));
 
         // Set up real-time subscription
         const subscription = supabase
             .channel('portfolio_comments')
-            .on('postgres_changes', 
-                { 
-                    event: '*', 
-                    schema: 'public', 
-                    table: 'portfolio_comments',
-                    filter: 'is_pinned=eq.false'
-                }, 
-                () => {
-                    fetchComments(); // Refresh comments when changes occur
-                }
-            )
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'portfolio_comments' }, (payload) => {
+                // When any change happens in the comments table, refetch all comments
+                // This handles new comments, pinning, unpinning, etc.
+                console.log('Change received!', payload);
+                fetchAllComments();
+            })
             .subscribe();
 
         return () => {
             subscription.unsubscribe();
         };
-    }, []);
+    }, [fetchAllComments]);
 
     const uploadImage = useCallback(async (imageFile) => {
         if (!imageFile) return null;
@@ -338,9 +327,9 @@ const Komentar = () => {
                 .from('portfolio_comments')
                 .insert([
                     {
-                        content: newComment,
-                        user_name: userName,
-                        profile_image: profileImageUrl,
+                        comment: newComment,
+                        name: userName,
+                        avatar_url: profileImageUrl,
                         is_pinned: false,
                         created_at: new Date().toISOString()
                     }
@@ -400,43 +389,58 @@ const Komentar = () => {
                     </div>
                 )}
                 
+                {fetchError && !isLoading && (
+                    <div className="flex items-center gap-2 p-4 text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-xl" data-aos="fade-in">
+                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                        <p className="text-sm">{fetchError}</p>
+                    </div>
+                )}
+
                 <div>
                     <CommentForm onSubmit={handleCommentSubmit} isSubmitting={isSubmitting} error={error} />
                 </div>
 
                 <div className="space-y-4 h-[328px] overflow-y-auto overflow-x-hidden custom-scrollbar pt-1 pr-1 " data-aos="fade-up" data-aos-delay="200">
-                    {/* Pinned Comment */}
-                    {pinnedComment && (
-                        <div data-aos="fade-down" data-aos-duration="800">
-                            <Comment 
-                                comment={pinnedComment} 
-                                formatDate={formatDate}
-                                index={0}
-                                isPinned={true}
-                            />
-                        </div>
-                    )}
-                    
-                    {/* Regular Comments */}
-                    {comments.length === 0 && !pinnedComment ? (
-                        <div className="text-center py-8" data-aos="fade-in">
-                            <UserCircle2 className="w-12 h-12 text-indigo-400 mx-auto mb-3 opacity-50" />
-                            <p className="text-gray-400">No comments yet. Start the conversation!</p>
+                    {isLoading ? (
+                        <div className="flex items-center justify-center h-full">
+                            <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
                         </div>
                     ) : (
-                        comments.map((comment, index) => (
-                            <Comment 
-                                key={comment.id} 
-                                comment={comment} 
-                                formatDate={formatDate}
-                                index={index + (pinnedComment ? 1 : 0)}
-                                isPinned={false}
-                            />
-                        ))
+                        <>
+                            {/* Pinned Comment */}
+                            {pinnedComment && (
+                                <div data-aos="fade-down" data-aos-duration="800">
+                                    <Comment 
+                                        comment={pinnedComment} 
+                                        formatDate={formatDate}
+                                        index={0}
+                                        isPinned={true}
+                                    />
+                                </div>
+                            )}
+                            
+                            {/* Regular Comments */}
+                            {comments.length === 0 && !pinnedComment && !fetchError ? (
+                                <div className="text-center py-8" data-aos="fade-in">
+                                    <UserCircle2 className="w-12 h-12 text-indigo-400 mx-auto mb-3 opacity-50" />
+                                    <p className="text-gray-400">No comments yet. Start the conversation!</p>
+                                </div>
+                            ) : (
+                                comments.map((comment, index) => (
+                                    <Comment 
+                                        key={comment.id} 
+                                        comment={comment} 
+                                        formatDate={formatDate}
+                                        index={index + (pinnedComment ? 1 : 0)}
+                                        isPinned={false}
+                                    />
+                                ))
+                            )}
+                        </>
                     )}
                 </div>
             </div>
-            <style jsx>{`
+            <style>{`
                 .custom-scrollbar::-webkit-scrollbar {
                     width: 6px;
                 }

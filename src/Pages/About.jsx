@@ -1,7 +1,9 @@
-import React, { useEffect, memo, useMemo } from "react"
-import { FileText, Code, Award, Globe, ArrowUpRight, Sparkles, UserCheck } from "lucide-react"
+import React, { useEffect, memo, useMemo, useState } from "react"
+import { FileText, Code, Award, Globe, ArrowUpRight, Sparkles, UserCheck, Loader2, AlertTriangle, X, ChevronLeft, ChevronRight } from "lucide-react"
 import AOS from 'aos'
 import 'aos/dist/aos.css'
+import { supabase } from "../supabaseClient"; // اتصال به سوپابیس
+
 
 // Memoized Components
 const Header = memo(() => (
@@ -21,7 +23,7 @@ const Header = memo(() => (
       data-aos-duration="800"
     >
       <Sparkles className="w-5 h-5 text-purple-400" />
-      Transforming ideas into digital experiences
+      Creating value through technology and creativity
       <Sparkles className="w-5 h-5 text-purple-400" />
     </p>
   </div>
@@ -111,6 +113,195 @@ const StatCard = memo(({ icon: Icon, color, value, label, description, animation
     </div>
   </div>
 ));
+
+const ImpactfulPeopleSlider = memo(() => {
+  const [people, setPeople] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedPerson, setSelectedPerson] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const fetchPeople = async () => {
+      try {
+        const { data, error: dbError } = await supabase
+          .from('impactful_people')
+          .select('*')
+          .order('id', { ascending: true });
+
+        if (dbError) {
+          throw dbError;
+        }
+        setPeople(data || []);
+      } catch (err) {
+        setError('Failed to load data. Check Supabase table "impactful_people" and RLS policies.');
+        console.error("Error fetching impactful people:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPeople();
+  }, []);
+
+  const [peopleCol1, peopleCol2, peopleCol3, peopleCol4, peopleCol5, peopleCol6] = useMemo(() => {
+    if (people.length === 0) return [[], [], [], [], [], []];
+    // Create six different shuffles for variety to minimize visible repetition
+    const shuffled1 = [...people].sort(() => 0.5 - Math.random());
+    const shuffled2 = [...people].sort(() => 0.5 - Math.random());
+    const shuffled3 = [...people].sort(() => 0.5 - Math.random());
+    const shuffled4 = [...people].sort(() => 0.5 - Math.random());
+    const shuffled5 = [...people].sort(() => 0.5 - Math.random());
+    const shuffled6 = [...people].sort(() => 0.5 - Math.random());
+    return [shuffled1, shuffled2, shuffled3, shuffled4, shuffled5, shuffled6];
+  }, [people]);
+
+  const handleCardClick = (person) => {
+    setSelectedPerson(person);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedPerson(null);
+  };
+
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center gap-2 p-4 my-8 text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+        <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+        <p className="text-sm">{error}</p>
+      </div>
+    );
+  }
+  
+  if (people.length === 0) {
+    return null; // اگر داده‌ای وجود نداشت، چیزی نمایش داده نمی‌شود
+  }
+
+  return (
+    <div className="mt-16" data-aos="fade-up" data-aos-duration="1000">
+      <div className="text-center mb-8">
+        <h3 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
+          Inspirations on My Journey
+        </h3>
+        <p className="mt-2 text-gray-400 text-sm">A tribute to the mentors and guides who have shaped my path.</p>
+      </div>
+      
+      <div className="relative bg-gray-900/30 backdrop-blur-sm rounded-2xl p-8 border border-white/10 overflow-hidden min-h-[420px] flex items-center justify-center transition-all duration-500">
+        <div className="absolute inset-0 -z-10">
+            <div className="absolute -top-10 -left-10 w-48 h-48 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse-slow"></div>
+            <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-gradient-to-l from-purple-500/20 to-indigo-500/20 rounded-full blur-3xl animate-spin-slower"></div>
+        </div>
+        {selectedPerson ? (
+          <div className="relative w-full animate-fade-in">
+            <button 
+              onClick={handleCloseDetail} 
+              className="absolute -top-5 -right-5 z-20 p-2 rounded-full bg-gray-800/50 hover:bg-gray-700/70 transition-colors"
+              aria-label="Close detail view"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+            <div className="flex flex-col md:flex-row gap-8 items-center">
+              <div className="w-48 h-56 md:w-56 md:h-64 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl shadow-indigo-500/20 transform hover:scale-105 transition-transform duration-500">
+                <img src={selectedPerson.image_url} alt={selectedPerson.name} className="w-full h-full object-cover" loading="lazy" />
+              </div>
+              <div className="text-center md:text-left animate-blurry-in">
+                <h3 className="text-3xl font-bold text-white mb-2">{selectedPerson.name}</h3>
+                <p className="text-lg font-medium text-indigo-300 mb-4">{selectedPerson.role}</p>
+                <p className="text-gray-300 text-sm leading-relaxed">{selectedPerson.impact_description}</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="relative group h-96 w-full max-w-6xl mx-auto overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)]">
+            <div className="flex justify-center gap-4 h-full">
+              {/* Column 1: Scrolling Up */}
+              <div className="flex flex-col gap-4 animate-scroll-up group-hover:[animation-play-state:paused]" style={{ animationDuration: `${people.length * 5.2}s` }}>
+                {[...peopleCol1, ...peopleCol1].map((person, index) => (
+                  <div key={`col1-${person.id}-${index}`} onClick={() => handleCardClick(person)} className="relative group/card w-40 h-56 rounded-xl overflow-hidden shadow-lg cursor-pointer flex-shrink-0 transition-transform duration-300 hover:!scale-105 hover:shadow-indigo-500/30">
+                    <img src={person.image_url} alt={person.name} className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-110" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-3 text-left">
+                      <h3 className="text-white font-bold text-base drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-100">{person.name}</h3>
+                      <p className="text-indigo-300 text-xs font-medium drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-200">{person.role}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Column 2: Scrolling Down */}
+              <div className="flex flex-col gap-4 animate-scroll-down group-hover:[animation-play-state:paused]" style={{ animationDuration: `${people.length * 6.1}s` }}>
+                {[...peopleCol2, ...peopleCol2].map((person, index) => (
+                   <div key={`col2-${person.id}-${index}`} onClick={() => handleCardClick(person)} className="relative group/card w-40 h-56 rounded-xl overflow-hidden shadow-lg cursor-pointer flex-shrink-0 transition-transform duration-300 hover:!scale-105 hover:shadow-indigo-500/30">
+                    <img src={person.image_url} alt={person.name} className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-110" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-3 text-left">
+                      <h3 className="text-white font-bold text-base drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-100">{person.name}</h3>
+                      <p className="text-indigo-300 text-xs font-medium drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-200">{person.role}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Column 3: Scrolling Up (hidden on small screens) */}
+              <div className="hidden sm:flex flex-col gap-4 animate-scroll-up group-hover:[animation-play-state:paused]" style={{ animationDuration: `${people.length * 5.5}s` }}>
+                {[...peopleCol3, ...peopleCol3].map((person, index) => (
+                  <div key={`col3-${person.id}-${index}`} onClick={() => handleCardClick(person)} className="relative group/card w-40 h-56 rounded-xl overflow-hidden shadow-lg cursor-pointer flex-shrink-0 transition-transform duration-300 hover:!scale-105 hover:shadow-indigo-500/30">
+                    <img src={person.image_url} alt={person.name} className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-110" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-3 text-left">
+                      <h3 className="text-white font-bold text-base drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-100">{person.name}</h3>
+                      <p className="text-indigo-300 text-xs font-medium drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-200">{person.role}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Column 4: Scrolling Down (hidden on medium screens) */}
+              <div className="hidden md:flex flex-col gap-4 animate-scroll-down group-hover:[animation-play-state:paused]" style={{ animationDuration: `${people.length * 6.3}s` }}>
+                {[...peopleCol4, ...peopleCol4].map((person, index) => (
+                   <div key={`col4-${person.id}-${index}`} onClick={() => handleCardClick(person)} className="relative group/card w-40 h-56 rounded-xl overflow-hidden shadow-lg cursor-pointer flex-shrink-0 transition-transform duration-300 hover:!scale-105 hover:shadow-indigo-500/30">
+                    <img src={person.image_url} alt={person.name} className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-110" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-3 text-left">
+                      <h3 className="text-white font-bold text-base drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-100">{person.name}</h3>
+                      <p className="text-indigo-300 text-xs font-medium drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-200">{person.role}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Column 5: Scrolling Up (hidden on large screens) */}
+              <div className="hidden lg:flex flex-col gap-4 animate-scroll-up group-hover:[animation-play-state:paused]" style={{ animationDuration: `${people.length * 4.8}s` }}>
+                {[...peopleCol5, ...peopleCol5].map((person, index) => (
+                  <div key={`col5-${person.id}-${index}`} onClick={() => handleCardClick(person)} className="relative group/card w-40 h-56 rounded-xl overflow-hidden shadow-lg cursor-pointer flex-shrink-0 transition-transform duration-300 hover:!scale-105 hover:shadow-indigo-500/30">
+                    <img src={person.image_url} alt={person.name} className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-110" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-3 text-left">
+                      <h3 className="text-white font-bold text-base drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-100">{person.name}</h3>
+                      <p className="text-indigo-300 text-xs font-medium drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-200">{person.role}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Column 6: Scrolling Down (hidden on xl screens) */}
+              <div className="hidden xl:flex flex-col gap-4 animate-scroll-down group-hover:[animation-play-state:paused]" style={{ animationDuration: `${people.length * 5.8}s` }}>
+                {[...peopleCol6, ...peopleCol6].map((person, index) => (
+                  <div key={`col6-${person.id}-${index}`} onClick={() => handleCardClick(person)} className="relative group/card w-40 h-56 rounded-xl overflow-hidden shadow-lg cursor-pointer flex-shrink-0 transition-transform duration-300 hover:!scale-105 hover:shadow-indigo-500/30">
+                    <img src={person.image_url} alt={person.name} className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-110" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-3 text-left">
+                      <h3 className="text-white font-bold text-base drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-100">{person.name}</h3>
+                      <p className="text-indigo-300 text-xs font-medium drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-200">{person.role}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
 
 const AboutPage = () => {
   // Memoized calculations
@@ -205,7 +396,7 @@ const AboutPage = () => {
                 data-aos="fade-right"
                 data-aos-duration="1300"
               >
-                Eki Zulfar Rachman
+                Sajad Mohammadi
               </span>
             </h2>
             
@@ -214,7 +405,7 @@ const AboutPage = () => {
               data-aos="fade-right"
               data-aos-duration="1500"
             >
-             Seorang lulusan Teknik Jaringan Komputer dan Telekomunikasi yang memiliki ketertarikan besar dalam pengembangan Front-End. Saya berfokus pada menciptakan pengalaman digital yang menarik dan selalu berusaha memberikan solusi terbaik dalam setiap proyek yang saya kerjakan.
+             Dynamic and results-driven professional with a diverse background in Computer Science, Graphic Design, IT Training, and Business Management. Demonstrates a proven ability to lead teams, develop innovative digital solutions, and drive operational efficiency across technical and managerial domains. Experienced in teaching, creative design, and implementing impactful IT strategies. Bilingual in English and Dari/Farsi, with exceptional communication, leadership, and problem-solving skills.
             </p>
 
                {/* Quote Section */}
@@ -235,12 +426,12 @@ const AboutPage = () => {
         </div>
         
         <blockquote className="text-gray-300 text-center lg:text-left italic font-medium text-sm relative z-10 pl-6">
-          "Leveraging AI as a professional tool, not a replacement."
+          "Utilizing AI to augment human potential, not replace it."
         </blockquote>
       </div>
 
             <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4 lg:gap-4 lg:px-0 w-full">
-              <a href="https://drive.google.com/drive/folders/1BOm51Grsabb3zj6Xk27K-iRwI1zITcpo" className="w-full lg:w-auto">
+              <a href="https://drive.google.com/drive/folders/1sXOjRPlQOK6IGUC-6BpLXFUO6j-g2BFG?dmr=1&ec=wgc-drive-hero-goto" className="w-full lg:w-auto">
               <button 
                 data-aos="fade-up"
                 data-aos-duration="800"
@@ -264,6 +455,8 @@ const AboutPage = () => {
           <ProfileImage />
         </div>
 
+        <ImpactfulPeopleSlider />
+
         <a href="#Portofolio">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 cursor-pointer">
             {statsData.map((stat) => (
@@ -273,7 +466,7 @@ const AboutPage = () => {
         </a>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-20px); }
@@ -289,6 +482,42 @@ const AboutPage = () => {
         }
         .animate-spin-slower {
           animation: spin-slower 8s linear infinite;
+        }
+        @keyframes blurry-in {
+          from {
+            filter: blur(5px);
+            opacity: 0;
+            transform: translateX(20px);
+          }
+          to {
+            filter: blur(0);
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        .animate-blurry-in {
+          animation: blurry-in 0.7s ease-out forwards;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-in-out forwards;
+        }
+        @keyframes scroll-up {
+          from { transform: translateY(0); }
+          to { transform: translateY(-50%); }
+        }
+        .animate-scroll-up {
+          animation: scroll-up linear infinite;
+        }
+        @keyframes scroll-down {
+          from { transform: translateY(-50%); }
+          to { transform: translateY(0); }
+        }
+        .animate-scroll-down {
+          animation: scroll-down linear infinite;
         }
       `}</style>
     </div>

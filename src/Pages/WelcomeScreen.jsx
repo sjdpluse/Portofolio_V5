@@ -3,34 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Code2, Github, Globe, User } from 'lucide-react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-
-const TypewriterEffect = ({ text }) => {
-  const [displayText, setDisplayText] = useState('');
-  
-  useEffect(() => {
-    let index = 0;
-    const timer = setInterval(() => {
-      if (index <= text.length) {
-        setDisplayText(text.slice(0, index));
-        index++;
-      } else {
-        clearInterval(timer);
-      }
-    }, 260);
-    
-    return () => clearInterval(timer);
-  }, [text]);
-
-  return (
-    <span className="inline-block">
-      {displayText}
-      <span className="animate-pulse">|</span>
-    </span>
-  );
-};
+import poseImage from '../assets/images/poseimage.png';
 
 const BackgroundEffect = () => (
   <div className="absolute inset-0 overflow-hidden">
+    <motion.img
+      src={poseImage}
+      alt=""
+      className="absolute inset-0 w-full h-full object-cover"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 0.1 }}
+      transition={{ duration: 1.5, ease: "easeOut" }}
+    />
     <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 blur-3xl animate-pulse" />
     <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/10 via-transparent to-purple-600/10 blur-2xl animate-float" />
   </div>
@@ -60,7 +44,7 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
       setTimeout(() => {
         onLoadingComplete?.();
       }, 1000);
-    }, 4000);
+    }, 2000);
     
     return () => clearTimeout(timer);
   }, [onLoadingComplete]);
@@ -96,7 +80,7 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
         <motion.div
           className="fixed inset-0 bg-[#030014]"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          animate={{ opacity: 1, transition: { duration: 0.5 } }}
           exit="exit"
           variants={containerVariants}
         >
@@ -148,11 +132,15 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
               <motion.div 
                 className="text-center"
                 variants={childVariants}
-                data-aos="fade-up"
-                data-aos-delay="1200"
+                initial={{ opacity: 0, filter: "blur(8px)" }}
+                animate={{
+                  opacity: 1,
+                  filter: "blur(0px)",
+                  transition: { duration: 1.5, ease: "easeOut", delay: 1.2 },
+                }}
               >
                 <a
-                  href="https://www.eki.my.id"
+                  href="https://www.sjdplus.co"
                   className="inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 rounded-full relative group hover:scale-105 transition-transform duration-300"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -161,7 +149,7 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
                   <div className="relative flex items-center gap-2 text-lg sm:text-xl md:text-2xl">
                     <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
                     <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                      <TypewriterEffect text="www.eki.my.id" />
+                      www.Sjdplus.co
                     </span>
                   </div>
                 </a>

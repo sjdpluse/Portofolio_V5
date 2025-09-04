@@ -5,6 +5,7 @@ import {
   ChevronRight, Layers, Layout, Globe, Package, Cpu, Code,
 } from "lucide-react";
 import Swal from 'sweetalert2';
+import { supabase } from "../supabase"; // 👈 ایمپورت کردن supabase
 
 const TECH_ICONS = {
   React: Globe,
@@ -34,14 +35,26 @@ const TechBadge = ({ tech }) => {
 };
 
 const FeatureItem = ({ feature }) => {
+  // متن را بر اساس اولین ": " تقسیم می‌کند تا عنوان و توضیحات جدا شوند
+  const parts = feature.split(/:\s(.+)/);
+  const title = parts[0];
+  const description = parts[1];
+
   return (
     <li className="group flex items-start space-x-3 p-2.5 md:p-3.5 rounded-xl hover:bg-white/5 transition-all duration-300 border border-transparent hover:border-white/10">
       <div className="relative mt-2">
         <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur group-hover:opacity-100 opacity-0 transition-opacity duration-300" />
         <div className="relative w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 group-hover:scale-125 transition-transform duration-300" />
       </div>
-      <span className="text-sm md:text-base text-gray-300 group-hover:text-white transition-colors">
-        {feature}
+      <span className="text-sm md:text-base text-gray-300 group-hover:text-white transition-colors leading-relaxed">
+        {description ? (
+          <>
+            <strong className="font-semibold text-white">{title.replace(/\*\*/g, '')}:</strong>
+            {' '}{description}
+          </>
+        ) : (
+          feature
+        )}
       </span>
     </li>
   );
@@ -61,7 +74,7 @@ const ProjectStats = ({ project }) => {
         </div>
         <div className="flex-grow">
           <div className="text-lg md:text-xl font-semibold text-blue-200">{techStackCount}</div>
-          <div className="text-[10px] md:text-xs text-gray-400">Total Teknologi</div>
+          <div className="text-[10px] md:text-xs text-gray-400">Total Technology</div>
         </div>
       </div>
 
@@ -83,8 +96,8 @@ const handleGithubClick = (githubLink) => {
     Swal.fire({
       icon: 'info',
       title: 'Source Code Private',
-      text: 'Maaf, source code untuk proyek ini bersifat privat.',
-      confirmButtonText: 'Mengerti',
+      text: 'Sorry, the source code for this project is private.',
+      confirmButtonText: 'Understood',
       confirmButtonColor: '#3085d6',
       background: '#030014',
       color: '#ffffff'
@@ -98,31 +111,99 @@ const ProjectDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const storedProjects = JSON.parse(localStorage.getItem("projects")) || [];
-    const selectedProject = storedProjects.find((p) => String(p.id) === id);
-    
-    if (selectedProject) {
-      const enhancedProject = {
-        ...selectedProject,
-        Features: selectedProject.Features || [],
-        TechStack: selectedProject.TechStack || [],
-        Github: selectedProject.Github || 'https://github.com/EkiZR',
-      };
-      setProject(enhancedProject);
-    }
+
+    const fetchProject = async () => {
+      setLoading(true);
+      setError(null);
+
+      // ۱. ابتدا سعی کن از localStorage بخوانی
+      const storedProjects = JSON.parse(localStorage.getItem("projects")) || [];
+      let selectedProject = storedProjects.find((p) => String(p.id) === id);
+
+      // ۲. اگر در localStorage نبود، از Supabase بخوان
+      if (!selectedProject) {
+        console.log('Project not found in localStorage, fetching from Supabase...');
+        const { data, error: fetchError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', id)
+          .single(); // .single() برای گرفتن فقط یک نتیجه مهم است
+
+        if (fetchError) {
+          console.error("Error fetching project:", fetchError);
+          setError("Could not load project details.");
+          setLoading(false);
+          return;
+        }
+        selectedProject = data;
+      }
+      
+      if (selectedProject) {
+        const parseStringToArray = (value) => {
+          if (Array.isArray(value)) {
+            return value;
+          }
+          if (typeof value === 'string' && value.trim().length > 0) {
+            return value.split(',').map(item => item.trim());
+          }
+          return [];
+        };
+
+        const enhancedProject = {
+          ...selectedProject,
+          Features: parseStringToArray(selectedProject.Features),
+          TechStack: parseStringToArray(selectedProject.TechStack),
+          Github: selectedProject.Github || 'https://github.com/sjdpluse',
+        };
+        setProject(enhancedProject);
+      } else {
+        setError("Project not found.");
+      }
+      setLoading(false);
+    };
+
+    fetchProject();
   }, [id]);
 
-  if (!project) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#030014] flex items-center justify-center">
         <div className="text-center space-y-6 animate-fadeIn">
           <div className="w-16 h-16 md:w-24 md:h-24 mx-auto border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
           <h2 className="text-xl md:text-3xl font-bold text-white">Loading Project...</h2>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+     return (
+      <div className="min-h-screen bg-[#030014] flex items-center justify-center text-center text-white">
+        <div>
+          <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
+          <p>{error}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="mt-6 group inline-flex items-center space-x-1.5 md:space-x-2 px-3 md:px-5 py-2 md:py-2.5 bg-white/5 backdrop-blur-xl rounded-xl text-white/90 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 text-sm md:text-base"
+          >
+            <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
+            <span>Go Back</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-[#030014] flex items-center justify-center text-white">
+        Project not found.
       </div>
     );
   }
