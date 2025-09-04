@@ -114,7 +114,7 @@ const ImpactfulPeopleSlider = memo(() => {
           </div>
         ) : (
           <div className="relative group h-96 w-full max-w-6xl mx-auto overflow-x-auto overflow-y-hidden [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] custom-horizontal-scrollbar">
-            <div className="flex justify-center gap-4 h-full">
+            <div className="flex justify-start md:justify-center gap-4 h-full min-w-max">
               {/* Columns */}
               {[peopleCol1, peopleCol2, peopleCol3, peopleCol4, peopleCol5, peopleCol6].map((col, colIndex) => (
                 <div
