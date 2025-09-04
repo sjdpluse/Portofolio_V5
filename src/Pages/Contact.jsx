@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { Share2, User, Mail, MessageSquare, Send } from "lucide-react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
+import { Share2, User, Mail, MessageSquare, Send, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import SocialLinks from "../components/SocialLinks";
-import Komentar from "../components/Commentar";
+// import Komentar from "../components/Commentar";
 import Swal from "sweetalert2";
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -15,6 +15,8 @@ const ContactPage = () => {
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const Komentar = lazy(() => import('../components/Commentar'));
 
   useEffect(() => {
     AOS.init({
@@ -229,8 +231,12 @@ const ContactPage = () => {
             </div>
           </div>
 
-          <div className="  bg-white/5 backdrop-blur-xl rounded-3xl p-3 py-3 md:p-10 md:py-8 shadow-2xl transform transition-all duration-500 hover:shadow-[#6366f1]/10">
-            <Komentar />
+          <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-3 py-3 md:p-10 md:py-8 shadow-2xl transform transition-all duration-500 hover:shadow-[#6366f1]/10 min-h-[500px]">
+            <Suspense fallback={
+              <div className="flex justify-center items-center h-full min-h-[400px]"><Loader2 className="w-8 h-8 text-indigo-400 animate-spin" /></div>
+            }>
+              <Komentar />
+            </Suspense>
           </div>
         </div>
       </div>
