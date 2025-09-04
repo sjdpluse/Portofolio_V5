@@ -6,7 +6,7 @@ Let me introduce myself, I'm **Sajad Mohammadi**. I'd like to share the portfoli
 
 ## 🚀 Live Demo
 
-**Website Link:** [https://www.sjdplus.com/](https://www.sjdplus.com/)
+**Website Link:** [https://sjdpluse.github.io/](https://sjdpluse.github.io/)
 
 ## 🛠️ Tech Stack
 
@@ -36,7 +36,7 @@ Follow these steps to run the project locally:
 
 ```bash
 git clone https://github.com/sjdpluse
-cd Portofolio_V5
+cd sjdpluse.github.io
 ```
 
 ### 2\. Install Dependencies
@@ -239,7 +239,7 @@ If you have any questions or need help with the setup, feel free to reach out\!
 
 **Sajad Mohammadi**
 
-  - Website: [https://www.sjdplus.id/](https://www.sjdplus.com/)
+  - Website: [https://sjdpluse.github.io](https://sjdpluse.github.io)
   - GitHub: [Sajad](https://github.com/sjdpluse)
 
 -----
