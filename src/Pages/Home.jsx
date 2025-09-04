@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, memo } from "react"
 import { Github, Linkedin, Mail, ExternalLink, Instagram, Sparkles } from "lucide-react"
 import AOS from 'aos'
 import 'aos/dist/aos.css'
+import codingGif from '../assets/images/coding.gif';
 
 // Memoized Components
 const StatusBadge = memo(() => (
@@ -223,7 +224,7 @@ const Home = () => {
                   isHovering ? "scale-105" : "scale-100"
                 }`}>
                   <img
-                    src="/coding.gif"
+                    src={codingGif}
                     alt="Coding animation"
                     className="w-full h-full object-contain rounded-2xl"
                   />
