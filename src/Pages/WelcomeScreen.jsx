@@ -5,6 +5,31 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import poseImage from '../assets/images/poseimage.png';
 
+const TypewriterEffect = ({ text, speed = 150 }) => {
+  const [displayText, setDisplayText] = useState('');
+  
+  useEffect(() => {
+    let index = 0;
+    const timer = setInterval(() => {
+      if (index < text.length) {
+        setDisplayText(prev => prev + text.charAt(index));
+        index++;
+      } else {
+        clearInterval(timer);
+      }
+    }, speed);
+    
+    return () => clearInterval(timer);
+  }, [text, speed]);
+
+  return (
+    <span className="inline-block">
+      {displayText}
+      <span className="animate-pulse">|</span>
+    </span>
+  );
+};
+
 const BackgroundEffect = () => (
   <div className="absolute inset-0 overflow-hidden">
     <motion.img
@@ -44,7 +69,7 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
       setTimeout(() => {
         onLoadingComplete?.();
       }, 1000);
-    }, 2000);
+    }, 4000);
     
     return () => clearTimeout(timer);
   }, [onLoadingComplete]);
@@ -132,12 +157,8 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
               <motion.div 
                 className="text-center"
                 variants={childVariants}
-                initial={{ opacity: 0, filter: "blur(8px)" }}
-                animate={{
-                  opacity: 1,
-                  filter: "blur(0px)",
-                  transition: { duration: 1.5, ease: "easeOut", delay: 1.2 },
-                }}
+                data-aos="fade-up"
+                data-aos-delay="1200"
               >
                 <a
                   href="https://www.sjdplus.co"
@@ -149,7 +170,7 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
                   <div className="relative flex items-center gap-2 text-lg sm:text-xl md:text-2xl">
                     <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
                     <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                      www.Sjdplus.co
+                      <TypewriterEffect text="www.Sjdplus.co" speed={150} />
                     </span>
                   </div>
                 </a>

@@ -33,14 +33,19 @@ const ImpactfulPeopleSlider = memo(() => {
 
   const [peopleCol1, peopleCol2, peopleCol3, peopleCol4, peopleCol5, peopleCol6] = useMemo(() => {
     if (people.length === 0) return [[], [], [], [], [], []];
-    // Create six different shuffles for variety to minimize visible repetition
-    const shuffled1 = [...people].sort(() => 0.5 - Math.random());
-    const shuffled2 = [...people].sort(() => 0.5 - Math.random());
-    const shuffled3 = [...people].sort(() => 0.5 - Math.random());
-    const shuffled4 = [...people].sort(() => 0.5 - Math.random());
-    const shuffled5 = [...people].sort(() => 0.5 - Math.random());
-    const shuffled6 = [...people].sort(() => 0.5 - Math.random());
-    return [shuffled1, shuffled2, shuffled3, shuffled4, shuffled5, shuffled6];
+    
+    // Shuffle the array once to create a base order
+    const baseShuffle = [...people].sort(() => 0.5 - Math.random());
+
+    // Create rotated versions for each column to ensure variety and reduce repetition
+    const createColumn = (offset) => {
+      if (people.length === 0) return [];
+      const effectiveOffset = offset % people.length;
+      return [...baseShuffle.slice(effectiveOffset), ...baseShuffle.slice(0, effectiveOffset)];
+    };
+
+    // Generate 6 columns, each starting with a different person
+    return Array.from({ length: 6 }, (_, i) => createColumn(i));
   }, [people]);
 
   const handleCardClick = (person) => {
@@ -108,19 +113,14 @@ const ImpactfulPeopleSlider = memo(() => {
             </div>
           </div>
         ) : (
-          <div className="relative group h-96 w-full max-w-6xl mx-auto overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)]">
+          <div className="relative group h-96 w-full max-w-6xl mx-auto overflow-x-auto overflow-y-hidden [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] custom-horizontal-scrollbar">
             <div className="flex justify-center gap-4 h-full">
               {/* Columns */}
               {[peopleCol1, peopleCol2, peopleCol3, peopleCol4, peopleCol5, peopleCol6].map((col, colIndex) => (
-                <div 
-                  key={colIndex} 
-                  className={`flex flex-col gap-4 group-hover:[animation-play-state:paused] ${colIndex % 2 === 0 ? 'animate-scroll-up' : 'animate-scroll-down'} ${
-                    colIndex === 2 ? 'hidden sm:flex' : 
-                    colIndex === 3 ? 'hidden md:flex' : 
-                    colIndex === 4 ? 'hidden lg:flex' : 
-                    colIndex === 5 ? 'hidden xl:flex' : ''
-                  }`} 
-                  style={{ animationDuration: `${people.length * (5 + Math.random() * 1.5)}s` }}
+                <div
+                  key={colIndex}
+                  className={`flex flex-col gap-4 group-hover:[animation-play-state:paused] ${colIndex % 2 === 0 ? 'animate-scroll-up' : 'animate-scroll-down'}`}
+                  style={{ animationDuration: `${people.length * (2.5 + Math.random())}s` }}
                 >
                   {[...col, ...col].map((person, index) => (
                     <div key={`${colIndex}-${person.id}-${index}`} onClick={() => handleCardClick(person)} className="relative group/card w-40 h-56 rounded-xl overflow-hidden shadow-lg cursor-pointer flex-shrink-0 transition-transform duration-300 hover:!scale-105 hover:shadow-indigo-500/30">
