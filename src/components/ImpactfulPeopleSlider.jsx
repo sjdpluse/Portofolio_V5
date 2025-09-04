@@ -87,7 +87,7 @@ const ImpactfulPeopleSlider = memo(() => {
         <p className="mt-2 text-gray-400 text-sm">A tribute to the mentors and guides who have shaped my path.</p>
       </div>
       
-      <div className="relative bg-gray-900/30 backdrop-blur-sm rounded-2xl p-8 border border-white/10 overflow-hidden min-h-[420px] flex items-center justify-center transition-all duration-500">
+      <div className="relative bg-gray-900/30 backdrop-blur-sm rounded-2xl p-4 md:p-8 border border-white/10 overflow-hidden min-h-[380px] md:min-h-[420px] flex items-center justify-center transition-all duration-500">
         <div className="absolute inset-0 -z-10">
             <div className="absolute -top-10 -left-10 w-48 h-48 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse-slow"></div>
             <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-gradient-to-l from-purple-500/20 to-indigo-500/20 rounded-full blur-3xl animate-spin-slower"></div>
@@ -114,20 +114,20 @@ const ImpactfulPeopleSlider = memo(() => {
           </div>
         ) : (
           <div className="relative group h-96 w-full max-w-6xl mx-auto overflow-x-auto overflow-y-hidden [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] custom-horizontal-scrollbar">
-            <div className="flex justify-start md:justify-center gap-4 h-full min-w-max">
+            <div className="flex justify-start md:justify-center gap-2 md:gap-4 h-full min-w-max">
               {/* Columns */}
               {[peopleCol1, peopleCol2, peopleCol3, peopleCol4, peopleCol5, peopleCol6].map((col, colIndex) => (
                 <div
                   key={colIndex}
-                  className={`flex flex-col gap-4 group-hover:[animation-play-state:paused] ${colIndex % 2 === 0 ? 'animate-scroll-up' : 'animate-scroll-down'}`}
+                  className={`flex flex-col gap-2 md:gap-4 group-hover:[animation-play-state:paused] ${colIndex % 2 === 0 ? 'animate-scroll-up' : 'animate-scroll-down'}`}
                   style={{ animationDuration: `${people.length * (2.5 + Math.random())}s` }}
                 >
                   {[...col, ...col].map((person, index) => (
-                    <div key={`${colIndex}-${person.id}-${index}`} onClick={() => handleCardClick(person)} className="relative group/card w-40 h-56 rounded-xl overflow-hidden shadow-lg cursor-pointer flex-shrink-0 transition-transform duration-300 hover:!scale-105 hover:shadow-indigo-500/30">
+                    <div key={`${colIndex}-${person.id}-${index}`} onClick={() => handleCardClick(person)} className="relative group/card w-24 h-36 md:w-40 md:h-56 rounded-xl overflow-hidden shadow-lg cursor-pointer flex-shrink-0 transition-transform duration-300 hover:!scale-105 hover:shadow-indigo-500/30">
                       <img src={person.image_url} alt={person.name} className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-110" loading="lazy" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-3 text-left">
-                        <h3 className="text-white font-bold text-base drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-100">{person.name}</h3>
-                        <p className="text-indigo-300 text-xs font-medium drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-200">{person.role}</p>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-2 md:p-3 text-left">
+                        <h3 className="text-white font-bold text-sm md:text-base drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-100">{person.name}</h3>
+                        <p className="text-indigo-300 text-[10px] md:text-xs font-medium drop-shadow-md transform translate-y-4 group-hover/card:translate-y-0 transition-transform duration-300 delay-200">{person.role}</p>
                       </div>
                     </div>
                   ))}
